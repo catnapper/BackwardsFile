@@ -1,3 +1,3 @@
-module Backwardsfile
-  VERSION = "0.0.1"
+class BackwardsFile
+  VERSION = "0.0.2"
 end
