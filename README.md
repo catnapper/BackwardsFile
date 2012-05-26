@@ -1,8 +1,9 @@
 # BackwardsFile
 
 Provides a class, BackwardsFile, that reads lines from a text file in reverse.
-This is exactly what the more established 'elif' gem by James Edward Gray II
-does, but there are a few differences:
+This is exactly what the more established 
+[elif](http://elif.rubyforge.org) gem by James Edward Gray II does, but there 
+are a few differences:
 
 - BackwardsFile returns Enumerators that lazily read the file.
 - The file is not held open.  The BackwardsFile object simply remembers its
