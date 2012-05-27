@@ -51,3 +51,24 @@ or
 	
 If a separator Regexp is not specified, a default one that recognizes both Unix
 and Windows line endings is used.
+
+### Exception Handling
+
+BackwardsFile tags exceptions with the BackwardsFile::Error module, allowing
+errors from within BackwardsFile to be caught explicitly like this:
+
+	begin
+	  bf = BackwardsFile.open 'non-existant-file.txt'
+	rescue BackwardsFile::Error
+	  # handle error
+	end
+	
+The original exception is preserved, so the following code that captures the
+error from the failed File#open operation inside of BackwardsFile will also 
+work:
+
+	begin
+	  bf = BackwardsFile.open 'non-existant-file.txt'
+	rescue Errno::ENOENT
+	  # handle error
+	end

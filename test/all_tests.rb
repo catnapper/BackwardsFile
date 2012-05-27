@@ -34,3 +34,11 @@ class TestAll < MiniTest::Unit::TestCase
 		assert_equal @desired_result, bf.each.to_a
 	end
 end
+
+class TestErrorHandling < MiniTest::Unit::TestCase
+	def test_exception_tagging
+		bf = BackwardsFile.new('doesnotexist.txt') rescue $!
+		assert_kind_of BackwardsFile::Error, bf
+		assert_kind_of Errno::ENOENT, bf
+	end
+end
