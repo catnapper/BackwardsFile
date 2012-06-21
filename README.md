@@ -14,40 +14,54 @@ are a few differences:
 
 There are several ways to use BackwardsFile.  The following are equivalent:
 
-	BackwardsFile.open('textfile.txt') { |line| # code }
-	BackwardsFile.each('textfile.txt') { |line| # code }
+```ruby
+BackwardsFile.open('textfile.txt') { |line| # code }
+BackwardsFile.each('textfile.txt') { |line| # code }
+```
 	
 If no code block is given, an Enumerator is returned that may be used like this:
 
-	bf = BackwardsFile.open('textfile.txt')
-	
-	# Iterate with Enumerator#next
-	last_line = bf.next
-	next_to_last_line = bf.next
-	
-	# or use each
-	bf.each { |line| # do something with each line }
+```ruby
+bf = BackwardsFile.open('textfile.txt')
+
+# Iterate with Enumerator#next
+last_line = bf.next
+next_to_last_line = bf.next
+
+# or use each
+bf.each { |line| # do something with each line }
+```
 	
 BackwardsFile includes Enumerable, so all the usual methods are available:
 
-	BackwardsFile.open('logfile.log').find_all { |line| line =~ /pattern/ }
-	BackwardsFile.open('textfile.txt').take(10)
-	
+```ruby
+BackwardsFile.open('logfile.log').find_all { |line| line =~ /pattern/ }
+BackwardsFile.open('textfile.txt').take(10)
+```
+
 The BackwardsFile object may also be instantiated directly:
 
-	bf = BackwardsFile.new 'textfile.txt'
+```ruby
+bf = BackwardsFile.new 'textfile.txt'
+```
 	
 and then iterated:
 
-	bf.each { |line| # code }
+```ruby
+bf.each { |line| # code }
+```
 	
 A custom line separator may be specified with a Regexp as follows:
 
-	BackwardsFile.open('textfile.txt', /sep_pattern/).each
+```ruby
+BackwardsFile.open('textfile.txt', /sep_pattern/).each
+```
 	
 or
 
-	bf = BackwardsFile.new 'textfile.txt', /sep_pattern/
+```ruby
+bf = BackwardsFile.new 'textfile.txt', /sep_pattern/
+```
 	
 If a separator Regexp is not specified, a default one that recognizes both Unix
 and Windows line endings is used.
@@ -57,18 +71,22 @@ and Windows line endings is used.
 BackwardsFile tags exceptions with the BackwardsFile::Error module, allowing
 errors from within BackwardsFile to be caught explicitly like this:
 
-	begin
-	  bf = BackwardsFile.open 'non-existant-file.txt'
-	rescue BackwardsFile::Error
-	  # handle error
-	end
+```ruby
+begin
+  bf = BackwardsFile.open 'non-existant-file.txt'
+rescue BackwardsFile::Error
+  # handle error
+end
+```
 	
 The original exception is preserved, so the following code that captures the
 error from the failed File#open operation inside of BackwardsFile will also 
 work:
 
-	begin
-	  bf = BackwardsFile.open 'non-existant-file.txt'
-	rescue Errno::ENOENT
-	  # handle error
-	end
+```ruby
+begin
+  bf = BackwardsFile.open 'non-existant-file.txt'
+rescue Errno::ENOENT
+  # handle error
+end
+```
