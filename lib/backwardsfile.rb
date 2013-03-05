@@ -35,11 +35,10 @@ class BackwardsFile
     block_given? ? lines.each { |l| yield l } : lines
   end
 
-  private
-
   def read_chunk pos, read_size = BACKWARDS_CHUNK_SIZE
     [pos, File.open(@filename, 'r') { |f| f.seek(pos); f.read(read_size) }]
   end
+
   def first_chunk_backwards
     raise StopIteration unless pos = File.size?(@filename)
     read_size = (pos % BACKWARDS_CHUNK_SIZE) == 0 ? 
@@ -47,10 +46,12 @@ class BackwardsFile
     pos -= read_size
     read_chunk pos, read_size
   end
+
   def next_chunk_backwards pos
     pos -= BACKWARDS_CHUNK_SIZE
     pos < 0 ? nil : read_chunk( pos )
   end
+
   # Returns an Enumerator that reads chunks of the file, starting from the end,
   # on demand (lazily).
   def chunks_backwards
@@ -63,6 +64,7 @@ class BackwardsFile
       end
     end
   end
+
   # Provides an Enumerator that breaks chunks into lines
   def lines
     Enumerator.new do |yielder|
@@ -80,5 +82,6 @@ class BackwardsFile
       end
     end
   end
+
 end
 
