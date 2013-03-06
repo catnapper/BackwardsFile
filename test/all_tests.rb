@@ -1,44 +1,81 @@
+require 'stringio'
+require 'tempfile'
+require 'minitest/spec'
 require 'minitest/autorun'
 
-TEST_FILES = Dir['test/tmp/*.txt']
+describe BackwardsFile do
 
-class TestAll < MiniTest::Unit::TestCase
-	def setup
-		@desired_result = IO.readlines('test/tmp/testfile_lf.txt').map do |l|
-			l.strip
-		end.reverse
-	end
-	def test_each_method_returns_enumerator
-		assert_kind_of Enumerator, BackwardsFile.new(TEST_FILES.first).each
-	end
-	def test_class_method_open_returns_enumerator
-		assert_kind_of Enumerator, BackwardsFile.open(TEST_FILES.first)
-	end
-	def test_class_method_each_returns_enumerator
-		assert_kind_of Enumerator, BackwardsFile.each(TEST_FILES.first)
-	end
-	def test_class_method_each_accepts_block
-		assert_equal @desired_result, 
-			BackwardsFile.each('test/tmp/testfile_lf.txt').to_a
-	end
-	def test_each_accepts_block
-		assert_equal @desired_result,
-			BackwardsFile.new('test/tmp/testfile_lf.txt').each.to_a
-	end
-	def test_crlf_file
-		assert_equal @desired_result,
-			BackwardsFile.each('test/tmp/testfile_crlf.txt').to_a
-	end
-	def test_custom_separator
-		bf = BackwardsFile.new 'test/tmp/testfile_q.txt', /q/
-		assert_equal @desired_result, bf.each.to_a
-	end
-end
+  describe 'internal implementation' do
 
-class TestErrorHandling < MiniTest::Unit::TestCase
-	def test_exception_tagging
-		bf = BackwardsFile.new('doesnotexist.txt') rescue $!
-		assert_kind_of BackwardsFile::Error, bf
-		assert_kind_of Errno::ENOENT, bf
-	end
+    before do
+      @testio = StringIO.new('!asdfasdf')
+      @bf = BackwardsFile.new io: @testio, chunk_size: 4
+    end
+
+    it 'sets the IO pos to end of the file' do
+      assert_equal @testio.size, @bf.io.pos
+    end
+
+    it 'determines the correct size for the first chunk' do
+      assert_equal 1, @bf.next_chunk_size
+    end
+
+    it 'can read a chunk from the file' do
+      assert_equal 'asdf', @bf.next_chunk(4)
+    end
+
+    it 'reads chunks sequentially starting at end of file' do
+      assert_equal 'f', @bf.next_chunk
+      assert_equal 'fasd', @bf.next_chunk
+      assert_equal '!asd', @bf.next_chunk
+    end
+
+  end
+
+  describe '#each' do
+
+    before do
+      @data = "line1\nline2\nline3\nline4"
+      @testio = StringIO.new(@data)
+      @bf = BackwardsFile.new io: @testio, chunk_size: 4, separator: "\n"
+    end
+
+    it '#each returns an enumerator' do
+      assert_kind_of Enumerator, @bf.each
+    end
+
+    it 'returns an empty enumerator when given a zero length file' do
+      io = StringIO.new('')
+      assert_equal 0, BackwardsFile.new(io: io).each.count
+    end
+
+    it 'returns lines in reverse order' do
+      result = ["line4", "line3\n", "line2\n", "line1\n"]
+      assert_equal result, @bf.each.to_a
+    end
+
+  end
+
+  it 'can be initialized with a filename' do
+    bf = BackwardsFile.new filename: Tempfile.new('test').path
+    assert_kind_of IO, bf.io
+  end
+
+  it 'closes ios that it owns after iterating' do
+    bf = BackwardsFile.new filename: Tempfile.new('test').path
+    bf.each.to_a
+    assert bf.io.closed?
+  end
+
+  it 'implements the open class method as an alias for new' do
+    bf = BackwardsFile.open filename: Tempfile.new('test').path
+    assert_kind_of IO, bf.io
+  end
+
+  it 'does not close ios given to it' do
+    bf = BackwardsFile.new io: StringIO.new('test')
+    bf.each.to_a
+    refute bf.io.closed?
+  end
+
 end

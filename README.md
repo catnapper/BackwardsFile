@@ -1,71 +1,52 @@
 # BackwardsFile
 
-Provides a class, BackwardsFile, that reads lines from a text file in reverse.
-This is exactly what the more established 
-[elif](http://elif.rubyforge.org) gem by James Edward Gray II does, but there 
-are a few differences:
+Provides a class, BackwardsFile, that reads lines from a text file in reverse order. 
 
-- BackwardsFile returns Enumerators that lazily read the file.
-- The file is not held open.  The BackwardsFile object simply remembers its
-	position in the file while iterating, and opens, reads, and closes the file
-	as needed.
+## Basic Usage
 
-## Usage
-
-There are several ways to use BackwardsFile.  The following are equivalent:
+BackwardsFile is instantiated with keyword parameters.  One of either `io` or `filename` must be specified.  For example:
 
 ```ruby
-BackwardsFile.open('textfile.txt') { |line| # code }
-BackwardsFile.each('textfile.txt') { |line| # code }
+file_io = File.open('testfile.txt', 'r')
+bf1 = BackwardsFile.new io: file_io
+
+# does the same thing, but opens and closes the file for you
+# The open class method is an alias for new
+bf2 = BackwardsFile.open filename: testfile.txt
 ```
-	
-If no code block is given, an Enumerator is returned that may be used like this:
+
+In the case where the filename is specified, BackwardsFile will open the file during initialization, and close it when the `#each` method has finished iteration.  If the `io` parameter is used, you are responsible for opening and closing the file.
+
+BackwardsFile implements an `#each` method that either passes lines to the given block, or returns an enumerator if no block is given:  
 
 ```ruby
-bf = BackwardsFile.open('textfile.txt')
+# pass a block
+BackwardsFile.new(filename: 'testfile.txt').each { |line| # code }
 
-# Iterate with Enumerator#next
-last_line = bf.next
-next_to_last_line = bf.next
-
-# or use each
-bf.each { |line| # do something with each line }
+# or get an enumerator for external iteration
+bf = BackwardsFile.new(filename: 'testfile.txt').each
+puts bf.next
+puts bf.next # etc
 ```
 	
 BackwardsFile includes Enumerable, so all the usual methods are available:
 
 ```ruby
-BackwardsFile.open('logfile.log').find_all { |line| line =~ /pattern/ }
-BackwardsFile.open('textfile.txt').take(10)
+BackwardsFile.new(filename: 'logfile.log').find_all { |line| line =~ /pattern/ }
+BackwardsFile.new(filename: 'textfile.txt').take(10)
 ```
 
-The BackwardsFile object may also be instantiated directly:
+## Other Options
+
+The default line separator is system defined.  A custom one may be specified by passing a string as the `separator` parameter:
 
 ```ruby
-bf = BackwardsFile.new 'textfile.txt'
+# use pipe as the line separator
+BackwardsFile.new(filename: 'a_file', separator: '|').each { |line| ... }
 ```
-	
-and then iterated:
 
-```ruby
-bf.each { |line| # code }
-```
+Internally BackwardsFile manages a buffer that reads pieces of the file in an on-demand fashion.  By default, these reads are 4Kib in size.  This may be changed by specifying the read size, in bytes, with the `chunk_size` parameter.
 	
-A custom line separator may be specified with a Regexp as follows:
-
-```ruby
-BackwardsFile.open('textfile.txt', /sep_pattern/).each
-```
-	
-or
-
-```ruby
-bf = BackwardsFile.new 'textfile.txt', /sep_pattern/
-```
-	
-If a separator Regexp is not specified, a default one that recognizes both Unix
-and Windows line endings is used.
-
 ### Exception Handling
 
 BackwardsFile tags exceptions with the BackwardsFile::Error module, allowing
@@ -73,20 +54,8 @@ errors from within BackwardsFile to be caught explicitly like this:
 
 ```ruby
 begin
-  bf = BackwardsFile.open 'non-existant-file.txt'
+  bf = BackwardsFile.new filename: 'non-existant-file.txt'
 rescue BackwardsFile::Error
-  # handle error
-end
-```
-	
-The original exception is preserved, so the following code that captures the
-error from the failed File#open operation inside of BackwardsFile will also 
-work:
-
-```ruby
-begin
-  bf = BackwardsFile.open 'non-existant-file.txt'
-rescue Errno::ENOENT
   # handle error
 end
 ```
