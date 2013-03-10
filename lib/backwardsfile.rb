@@ -42,8 +42,9 @@ class BackwardsFile
   end
 
   def next_chunk size = next_chunk_size
-    start_pos = (io.pos -= size)
-    raise EOFError if io.pos < 0
+    start_pos = io.pos - size
+    raise EOFError if start_pos < 0
+    io.pos = start_pos
     chunk = io.read size
     io.pos = start_pos
     chunk
