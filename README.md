@@ -45,7 +45,7 @@ The default line separator is system defined.  A custom one may be specified by 
 BackwardsFile.new(filename: 'a_file', separator: '|').each { |line| ... }
 ```
 
-Internally BackwardsFile manages a buffer that reads pieces of the file in an on-demand fashion.  By default, these reads are 4Kib in size.  This may be changed by specifying the read size, in bytes, with the `chunk_size` parameter.
+Internally BackwardsFile manages a buffer that reads pieces of the file in an on-demand fashion.  By default, these reads are 4KiB in size.  This may be changed by specifying the read size, in bytes, with the `chunk_size` parameter.
 	
 ### Exception Handling
 
